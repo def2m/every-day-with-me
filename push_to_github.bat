@@ -1,5 +1,6 @@
 @echo off
 chcp 65001 > nul
+set "PATH=%LOCALAPPDATA%\Programs\Git\cmd;%PATH%"
 title 365 Gun - GitHub'a Yukle ve APK Derle
 color 0b
 
