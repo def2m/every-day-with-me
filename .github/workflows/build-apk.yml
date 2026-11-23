@@ -1,0 +1,72 @@
+name: Android APK Oluştur ve Yayınla (Build APK)
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: APK Derle (Release APK)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Kodu İndir (Checkout)
+        uses: actions/checkout@v4
+
+      - name: Java Kurulumu (Java 17)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Flutter Kurulumu
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.0'
+          channel: 'stable'
+          cache: true
+
+      - name: Android Platform Dosyalarını Kontrol Et
+        run: flutter create --platforms=android --org com.gun365 .
+
+      - name: Paketleri İndir (pub get)
+        run: flutter pub get
+
+      - name: APK'yı Derle (Release APK)
+        run: flutter build apk --release
+
+      - name: APK Dosyasını Yeniden Adlandır
+        run: |
+          mkdir -p output
+          cp build/app/outputs/flutter-apk/app-release.apk output/gun365-release.apk
+
+      - name: APK'yı GitHub Artifact Olarak Yükle
+        uses: actions/upload-artifact@v4
+        with:
+          name: gun365-apk
+          path: output/gun365-release.apk
+          retention-days: 30
+
+      - name: GitHub Release Olarak Yayınla (Otomatik Sürüm)
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: 365 Gün Uygulaması v1.0.${{ github.run_number }}
+          draft: false
+          prerelease: false
+          files: output/gun365-release.apk
+          body: |
+            ✨ **365 Gün (Gökyüzü Günlüğü) Android APK** ✨
+            
+            Uygulamanız başarıyla derlendi!
+            
+            ### 📱 Kurulum Adımları:
+            1. Aşağıdaki **Assets** bölümünden **`gun365-release.apk`** dosyasına telefonunuzdan tıklayıp indirin.
+            2. İndirilen dosyaya dokunun ve **Yükle** seçeneğini seçin.
+            3. Eğer "Bilinmeyen kaynaklardan yükleme" uyarısı çıkarsa "İzin ver" veya "Yine de yükle" deyin.
+            4. Uygulamanız hazır! Her gün girip anılarınızı birer yıldıza dönüştürebilirsiniz. ⭐🌙

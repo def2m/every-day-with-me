@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>365 Gün - Gökyüzü Günlüğü</title>
+  <style>
+    :root {
+      --bg-dark: #070818;
+      --surface: #10132C;
+      --card: #161938;
+      --dot-empty: #7474DB;
+      --dot-glow: rgba(116, 116, 219, 0.4);
+      --text-light: #ECEFF8;
+      --text-muted: #8D93AB;
+      --gold: #FFD700;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #03040B;
+      color: var(--text-light);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Mobile Container Frame */
+    .phone-container {
+      width: 100%;
+      max-width: 420px;
+      height: 100vh;
+      max-height: 890px;
+      background: var(--bg-dark);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 40px rgba(116, 116, 219, 0.15);
+      overflow: hidden;
+      border-radius: 24px;
+    }
+
+    @media (max-width: 500px) {
+      .phone-container {
+        max-height: 100vh;
+        border-radius: 0;
+      }
+    }
+
+    /* Cosmic Background Starfield */
+    .phone-container::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: 
+        radial-gradient(1px 1px at 20px 30px, #ffffff, rgba(0,0,0,0)),
+        radial-gradient(1.5px 1.5px at 140px 180px, #a855f7, rgba(0,0,0,0)),
+        radial-gradient(1px 1px at 280px 70px, #38bdf8, rgba(0,0,0,0)),
+        radial-gradient(1px 1px at 320px 320px, #ffffff, rgba(0,0,0,0)),
+        radial-gradient(1.2px 1.2px at 80px 480px, #fb7185, rgba(0,0,0,0)),
+        radial-gradient(1px 1px at 230px 620px, #ffffff, rgba(0,0,0,0));
+      background-repeat: repeat;
+      background-size: 350px 700px;
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    /* Screens */
+    .screen {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      overflow-y: auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    /* Header */
+    .top-bar {
+      padding: 16px 20px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 2;
+    }
+
+    .top-bar h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-badge {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .stat-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 8px var(--gold);
+    }
+
+    .today-pill {
+      background: var(--surface);
+      border: 1px solid rgba(255, 215, 0, 0.4);
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gold);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+
+    .today-pill:hover {
+      background: rgba(255, 215, 0, 0.15);
+    }
+
+    .progress-bar-container {
+      padding: 0 20px 8px;
+    }
+
+    .progress-bar {
+      height: 3px;
+      background: var(--card);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #7474DB, var(--gold));
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+
+    /* 365 Dots Canvas Area */
+    .canvas-wrap {
+      flex: 1;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 8px 12px;
+    }
+
+    #dotsCanvas {
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .hint-bar {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 6px 0 10px;
+      font-style: italic;
+    }
+
+    /* Notes List Screen */
+    .notes-feed {
+      padding: 12px 18px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .search-box {
+      margin: 8px 18px 12px;
+      background: var(--surface);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .search-box input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-light);
+      padding: 12px 8px;
+      font-size: 13px;
+    }
+
+    .note-card {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      gap: 14px;
+      cursor: pointer;
+      transition: transform 0.15s, border-color 0.2s;
+    }
+
+    .note-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,0.2);
+    }
+
+    .shape-badge {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 22px;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .note-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .note-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .note-date {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-light);
+    }
+
+    .note-day-num {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .note-mood {
+      font-size: 11px;
+      color: var(--gold);
+    }
+
+    .note-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .note-body {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Today Screen */
+    .today-wrapper {
+      padding: 16px 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card-banner {
+      background: linear-gradient(135deg, #1C1D42, #10132C);
+      border-radius: 20px;
+      padding: 18px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-light);
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    /* Shape & Color Pickers */
+    .shapes-scroll {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+    }
+
+    .shape-item {
+      width: 50px;
+      height: 56px;
+      background: var(--card);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255,255,255,0.1);
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+
+    .shape-item.selected {
+      border-color: var(--gold);
+      background: rgba(255, 215, 0, 0.15);
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+    }
+
+    .colors-scroll {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .color-dot {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+
+    .color-dot.selected {
+      border-color: #fff;
+      transform: scale(1.15);
+      box-shadow: 0 0 10px currentColor;
+    }
+
+    .moods-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .mood-chip {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+
+    .mood-chip.selected {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(255, 215, 0, 0.15);
+    }
+
+    .input-field {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: var(--text-light);
+      font-size: 13px;
+      outline: none;
+    }
+
+    .input-field:focus {
+      border-color: var(--gold);
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: var(--gold);
+      color: #000;
+      font-weight: 700;
+      padding: 14px;
+      border-radius: 14px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 16px rgba(255, 215, 0, 0.4);
+      transition: opacity 0.2s;
+    }
+
+    .btn-submit:hover {
+      opacity: 0.9;
+    }
+
+    /* Modal Sheet */
+    .modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      z-index: 10;
+      display: none;
+      justify-content: flex-end;
+      flex-direction: column;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .bottom-sheet {
+      background: var(--surface);
+      border-radius: 26px 26px 0 0;
+      padding: 20px 20px 30px;
+      max-height: 85%;
+      overflow-y: auto;
+      border-top: 1px solid rgba(255,255,255,0.15);
+      animation: slideUp 0.25s ease-out;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .sheet-handle {
+      width: 40px;
+      height: 4px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 2px;
+      margin: 0 auto 16px;
+    }
+
+    /* Bottom Navigation Bar */
+    .bottom-nav {
+      height: 64px;
+      background: var(--surface);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 5;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 10px;
+      transition: all 0.2s;
+    }
+
+    .nav-item.active {
+      color: var(--gold);
+    }
+
+    .nav-icon {
+      font-size: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="phone-container">
+    <!-- Top Progress Bar -->
+    <div class="progress-bar-container">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+
+    <!-- SCREEN 1: 365 DOTS CONSTELLATION MAP -->
+    <div class="screen active" id="screenConstellation">
+      <div class="top-bar">
+        <div>
+          <h1>365 Gün</h1>
+          <div class="stat-badge">
+            <span class="stat-dot"></span>
+            <span id="statText">0 / 365 Yıldız Aydınlatıldı</span>
+          </div>
+        </div>
+        <div class="today-pill" onclick="openToday()">
+          <span>⭐</span>
+          <span id="todayPillText">Bugün</span>
+        </div>
+      </div>
+
+      <div class="canvas-wrap">
+        <canvas id="dotsCanvas"></canvas>
+      </div>
+
+      <div class="hint-bar">
+        Bir güne dokunarak şeklini seç ve anını yaz ✨
+      </div>
+    </div>
+
+    <!-- SCREEN 2: NOTES JOURNAL FEED -->
+    <div class="screen" id="screenNotes">
+      <div class="top-bar">
+        <div>
+          <h1>Günlük & Anılar</h1>
+          <div class="stat-badge">Yıldızlarına bıraktığın notlar</div>
+        </div>
+        <div style="font-size:12px; color:var(--text-muted)" id="notesCountBadge">0 Not</div>
+      </div>
+
+      <div class="search-box">
+        <span>🔍</span>
+        <input type="text" id="searchInput" placeholder="Notlarda veya tarihlerde ara..." oninput="renderNotes()">
+      </div>
+
+      <div class="notes-feed" id="notesList">
+        <!-- Dynamically rendered -->
+      </div>
+    </div>
+
+    <!-- SCREEN 3: TODAY QUICK ENTRY -->
+    <div class="screen" id="screenToday">
+      <div class="top-bar">
+        <h1>Bugün</h1>
+      </div>
+
+      <div class="today-wrapper">
+        <div class="card-banner">
+          <div style="font-size:11px; color:var(--gold); font-weight:bold; margin-bottom:4px;" id="todayStreak">🔥 1 Günlük Seri</div>
+          <div style="font-size:20px; font-weight:bold;" id="todayFullDate">23 Kasım 2026</div>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:2px;" id="todayDaySub">Yılın 327. Günü</div>
+        </div>
+
+        <div id="todayContent">
+          <!-- Filled or Form -->
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 4: SETTINGS & BACKUP -->
+    <div class="screen" id="screenSettings">
+      <div class="top-bar">
+        <h1>Ayarlar & Yedek</h1>
+      </div>
+      <div style="padding: 18px 20px; display:flex; flex-direction:column; gap:14px;">
+        <div class="card-banner">
+          <div style="font-size:15px; font-weight:bold; margin-bottom:6px;">365 Gün Uygulaması</div>
+          <div style="font-size:12px; color:var(--text-muted); line-height:1.4;">
+            Android APK ve GitHub Actions destekli çevrimdışı günlük. Tüm verilerin cihazında güvenle saklanır.
+          </div>
+        </div>
+
+        <button class="btn-submit" style="background:var(--surface); color:var(--text-light); border:1px solid rgba(255,255,255,0.15);" onclick="loadSampleStars()">
+          ✨ Örnek Yıldızları Yükle
+        </button>
+
+        <button class="btn-submit" style="background:var(--surface); color:var(--text-light); border:1px solid rgba(255,255,255,0.15);" onclick="exportData()">
+          📋 Yedeği Kopyala (JSON)
+        </button>
+
+        <button class="btn-submit" style="background:#e11d48; color:#fff;" onclick="clearAllData()">
+          🗑️ Tüm Günlüğü Sıfırla
+        </button>
+      </div>
+    </div>
+
+    <!-- MODAL BOTTOM SHEET -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModalOnOverlay(event)">
+      <div class="bottom-sheet" id="bottomSheet">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+
+    <!-- BOTTOM NAVIGATION BAR -->
+    <div class="bottom-nav">
+      <div class="nav-item active" onclick="switchTab(0)">
+        <span class="nav-icon">🌌</span>
+        <span>365 Gün</span>
+      </div>
+      <div class="nav-item" onclick="switchTab(1)">
+        <span class="nav-icon">📖</span>
+        <span>Notlarım</span>
+      </div>
+      <div class="nav-item" onclick="switchTab(2)">
+        <span class="nav-icon">⭐</span>
+        <span>Bugün</span>
+      </div>
+      <div class="nav-item" onclick="switchTab(3)">
+        <span class="nav-icon">⚙️</span>
+        <span>Ayarlar</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Data & Constants ---
+    const SHAPES = [
+      { id: 'star', name: 'Yıldız', symbol: '⭐' },
+      { id: 'moon', name: 'Hilal', symbol: '🌙' },
+      { id: 'sun', name: 'Güneş', symbol: '☀️' },
+      { id: 'heart', name: 'Kalp', symbol: '💖' },
+      { id: 'flower', name: 'Çiçek', symbol: '🌸' },
+      { id: 'sparkle', name: 'Kıvılcım', symbol: '✦' },
+      { id: 'diamond', name: 'Elmas', symbol: '💎' },
+      { id: 'clover', name: 'Yonca', symbol: '🍀' },
+      { id: 'butterfly', name: 'Kelebek', symbol: '🦋' },
+      { id: 'fire', name: 'Ateş', symbol: '🔥' },
+      { id: 'leaf', name: 'Yaprak', symbol: '🌿' },
+      { id: 'planet', name: 'Gezegen', symbol: '🪐' },
+      { id: 'coffee', name: 'Kahve', symbol: '☕' },
+      { id: 'bolt', name: 'Şimşek', symbol: '⚡' },
+      { id: 'candle', name: 'Mum', symbol: '🕯️' },
+      { id: 'dove', name: 'Barış', symbol: '🕊️' }
+    ];
+
+    const COLORS = [
+      { name: 'Altın', value: '#FFD700' },
+      { name: 'Kozmik Mor', value: '#A855F7' },
+      { name: 'Gök Mavisi', value: '#38BDF8' },
+      { name: 'Gül Pembesi', value: '#FB7185' },
+      { name: 'Zümrüt', value: '#34D399' },
+      { name: 'Gün Batımı', value: '#FB923C' },
+      { name: 'Saf Beyaz', value: '#FFFFFF' },
+      { name: 'Yakut Kırmızı', value: '#EF4444' }
+    ];
+
+    const MOODS = ['✨ Harika', '🌸 Mutlu', '☕ Huzurlu', '💭 Düşünceli', '😴 Yorgun', '💖 Romantik', '⚡ Enerjik', '🌧️ Hüzünlü'];
+
+    const MONTHS = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+    const DAYS_IN_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+    function getTurkishDate(dayNumber) {
+      let rem = dayNumber;
+      for (let i = 0; i < DAYS_IN_MONTH.length; i++) {
+        if (rem <= DAYS_IN_MONTH[i]) {
+          return `${rem} ${MONTHS[i]} 2026`;
+        }
+        rem -= DAYS_IN_MONTH[i];
+      }
+      return '31 Aralık 2026';
+    }
+
+    function getTodayDayOfYear() {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), 0, 0);
+      const diff = (now - start) + ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
+      const oneDay = 1000 * 60 * 60 * 24;
+      const day = Math.floor(diff / oneDay);
+      return Math.min(Math.max(day, 1), 365);
+    }
+
+    const todayNum = getTodayDayOfYear();
+
+    // Load Entries from LocalStorage
+    let entries = JSON.parse(localStorage.getItem('gun365_entries') || '{}');
+
+    // Canvas setup
+    const canvas = document.getElementById('dotsCanvas');
+    const ctx = canvas.getContext('2d');
+    let canvasW, canvasH;
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvasW = rect.width;
+      canvasH = rect.height;
+      canvas.width = canvasW * dpr;
+      canvas.height = canvasH * dpr;
+      ctx.scale(dpr, dpr);
+      drawConstellation();
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+
+    // Calculate dot position (matching the organic wavy constellation layout in the reference photo)
+    function getDotPos(day) {
+      const cols = 14;
+      const rows = 26;
+      const index = day - 1;
+      const r = Math.floor(index / cols);
+      const c = index % cols;
+
+      const padX = canvasW * 0.07;
+      const padY = canvasH * 0.04;
+      const stepX = (canvasW - padX * 2) / (cols - 1);
+      const stepY = (canvasH - padY * 2) / (rows - 1);
+
+      const waveX = Math.sin(r * 0.85 + c * 0.5) * (stepX * 0.16);
+      const waveY = Math.cos(c * 0.75 + r * 0.4) * (stepY * 0.14);
+
+      return {
+        x: padX + c * stepX + waveX,
+        y: padY + r * stepY + waveY
+      };
+    }
+
+    let pulseAngle = 0;
+    function drawConstellation() {
+      if (!ctx || !canvasW) return;
+      ctx.clearRect(0, 0, canvasW, canvasH);
+
+      pulseAngle += 0.04;
+      const pulse = (Math.sin(pulseAngle) + 1) / 2;
+
+      // Draw all 365 dots
+      for (let day = 1; day <= 365; day++) {
+        const pos = getDotPos(day);
+        const entry = entries[day];
+        const isToday = (day === todayNum);
+
+        if (entry) {
+          // --- FILLED DAY: Glow + Shape ---
+          const col = entry.colorValue || '#FFD700';
+
+          // Outer aura
+          ctx.save();
+          ctx.shadowColor = col;
+          ctx.shadowBlur = 10 + pulse * 4;
+          ctx.fillStyle = col;
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, 4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+
+          // Symbol
+          const shapeObj = SHAPES.find(s => s.id === entry.shape) || { symbol: '⭐' };
+          ctx.font = '12px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(shapeObj.symbol, pos.x, pos.y);
+        } else {
+          // --- EMPTY DAY: Soft periwinkle dot (like reference photo) ---
+          ctx.fillStyle = 'rgba(116, 116, 219, 0.25)';
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, 4.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#7474DB';
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, 2.4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Today Ring
+        if (isToday) {
+          ctx.strokeStyle = `rgba(255, 215, 0, ${0.4 + pulse * 0.6})`;
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, 8 + pulse * 3, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+
+      requestAnimationFrame(drawConstellation);
+    }
+
+    // Canvas click detection
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      let closestDay = null;
+      let minDist = 22;
+
+      for (let day = 1; day <= 365; day++) {
+        const pos = getDotPos(day);
+        const dist = Math.hypot(pos.x - clickX, pos.y - clickY);
+        if (dist < minDist) {
+          minDist = dist;
+          closestDay = day;
+        }
+      }
+
+      if (closestDay) {
+        openDaySheet(closestDay);
+      }
+    });
+
+    // Sheet Modal Management
+    function openDaySheet(day) {
+      const entry = entries[day];
+      const sheet = document.getElementById('bottomSheet');
+      const dateStr = getTurkishDate(day);
+
+      if (entry) {
+        // View existing entry
+        const shapeObj = SHAPES.find(s => s.id === entry.shape) || { symbol: '⭐', name: 'Yıldız' };
+        sheet.innerHTML = `
+          <div class="sheet-handle"></div>
+          <div style="text-align:center; margin-bottom:16px;">
+            <div style="width:60px; height:60px; border-radius:50%; background:${entry.colorValue}22; border:2px solid ${entry.colorValue}; display:flex; align-items:center; justify-content:center; font-size:30px; margin:0 auto 10px; box-shadow:0 0 16px ${entry.colorValue}66;">
+              ${shapeObj.symbol}
+            </div>
+            <div style="font-size:18px; font-weight:bold;">${dateStr}</div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">Yılın ${day}. Günü ${entry.mood ? '• ' + entry.mood : ''}</div>
+          </div>
+
+          <div style="background:var(--card); border-radius:14px; padding:16px; margin-bottom:20px; border:1px solid rgba(255,255,255,0.08);">
+            ${entry.title ? `<div style="color:${entry.colorValue}; font-weight:bold; font-size:15px; margin-bottom:8px;">${escapeHtml(entry.title)}</div>` : ''}
+            <div style="font-size:14px; line-height:1.5; color:var(--text-light);">${escapeHtml(entry.note)}</div>
+          </div>
+
+          <div style="display:flex; gap:10px;">
+            <button class="btn-submit" style="flex:1; background:var(--card); color:var(--text-light); border:1px solid rgba(255,255,255,0.15);" onclick="openEditSheet(${day})">✏️ Düzenle</button>
+            <button class="btn-submit" style="width:48px; background:#e11d48; color:#fff;" onclick="deleteDayEntry(${day})">🗑️</button>
+          </div>
+        `;
+      } else {
+        openEditSheet(day);
+        return;
+      }
+
+      document.getElementById('modalOverlay').classList.add('active');
+    }
+
+    let selectedShape = 'star';
+    let selectedColor = '#FFD700';
+    let selectedMood = '✨ Harika';
+
+    function openEditSheet(day) {
+      const entry = entries[day];
+      const sheet = document.getElementById('bottomSheet');
+      const dateStr = getTurkishDate(day);
+
+      selectedShape = entry ? entry.shape : 'star';
+      selectedColor = entry ? entry.colorValue : '#FFD700';
+      selectedMood = entry ? (entry.mood || '✨ Harika') : '✨ Harika';
+
+      sheet.innerHTML = `
+        <div class="sheet-handle"></div>
+        <div style="font-size:18px; font-weight:bold; margin-bottom:2px;">${dateStr}</div>
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Yılın ${day}. Gününü Aydınlat</div>
+
+        <div class="form-group">
+          <label class="form-label">Günün Şekli</label>
+          <div class="shapes-scroll" id="shapePicker">
+            ${SHAPES.map(s => `
+              <div class="shape-item ${s.id === selectedShape ? 'selected' : ''}" onclick="pickShape('${s.id}')">
+                <span style="font-size:20px;">${s.symbol}</span>
+                <span style="font-size:9px; color:var(--text-muted);">${s.name}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Işıltı Rengi</label>
+          <div class="colors-scroll" id="colorPicker">
+            ${COLORS.map(c => `
+              <div class="color-dot ${c.value === selectedColor ? 'selected' : ''}" style="background:${c.value};" onclick="pickColor('${c.value}')"></div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Günün Hissi</label>
+          <div class="moods-wrap" id="moodPicker">
+            ${MOODS.map(m => `
+              <div class="mood-chip ${m === selectedMood ? 'selected' : ''}" onclick="pickMood('${m}')">${m}</div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <input type="text" class="input-field" id="modalTitleInput" placeholder="Başlık (isteğe bağlı)" value="${entry && entry.title ? escapeHtml(entry.title) : ''}">
+        </div>
+
+        <div class="form-group">
+          <textarea class="input-field" id="modalNoteInput" rows="4" placeholder="Bugün neler yaşadın? Aklından ve kalbinden geçenler...">${entry && entry.note ? escapeHtml(entry.note) : ''}</textarea>
+        </div>
+
+        <button class="btn-submit" onclick="saveModalEntry(${day})">
+          ✨ Günü Gökyüzüne Kaydet
+        </button>
+      `;
+
+      document.getElementById('modalOverlay').classList.add('active');
+    }
+
+    function pickShape(id) {
+      selectedShape = id;
+      document.querySelectorAll('#shapePicker .shape-item').forEach(el => el.classList.remove('selected'));
+      event.currentTarget.classList.add('selected');
+    }
+
+    function pickColor(hex) {
+      selectedColor = hex;
+      document.querySelectorAll('#colorPicker .color-dot').forEach(el => el.classList.remove('selected'));
+      event.currentTarget.classList.add('selected');
+    }
+
+    function pickMood(m) {
+      selectedMood = m;
+      document.querySelectorAll('#moodPicker .mood-chip').forEach(el => el.classList.remove('selected'));
+      event.currentTarget.classList.add('selected');
+    }
+
+    function saveModalEntry(day) {
+      const note = document.getElementById('modalNoteInput').value.trim();
+      const title = document.getElementById('modalTitleInput').value.trim();
+
+      if (!note) {
+        alert('Lütfen günün için bir iki cümle not yaz ✨');
+        return;
+      }
+
+      entries[day] = {
+        dayNumber: day,
+        dateString: getTurkishDate(day),
+        shape: selectedShape,
+        colorValue: selectedColor,
+        mood: selectedMood,
+        title: title,
+        note: note,
+        updatedAt: new Date().toISOString()
+      };
+
+      saveData();
+      closeModal();
+      updateStats();
+      renderNotes();
+      renderToday();
+    }
+
+    function deleteDayEntry(day) {
+      if (confirm('Bu günün notunu silmek istediğine emin misin?')) {
+        delete entries[day];
+        saveData();
+        closeModal();
+        updateStats();
+        renderNotes();
+        renderToday();
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('active');
+    }
+
+    function closeModalOnOverlay(e) {
+      if (e.target.id === 'modalOverlay') {
+        closeModal();
+      }
+    }
+
+    function saveData() {
+      localStorage.setItem('gun365_entries', JSON.stringify(entries));
+    }
+
+    function updateStats() {
+      const count = Object.keys(entries).length;
+      const pct = ((count / 365) * 100).toFixed(1);
+      document.getElementById('statText').innerText = `${count} / 365 Yıldız Aydınlatıldı (%${pct})`;
+      document.getElementById('progressFill').style.width = `${(count / 365) * 100}%`;
+      document.getElementById('notesCountBadge').innerText = `${count} Not`;
+    }
+
+    // Render Notes Feed (Tab 2)
+    function renderNotes() {
+      const list = document.getElementById('notesList');
+      const query = (document.getElementById('searchInput').value || '').toLowerCase();
+
+      const sorted = Object.values(entries).sort((a, b) => b.dayNumber - a.dayNumber);
+      const filtered = sorted.filter(e => 
+        e.note.toLowerCase().includes(query) ||
+        (e.title && e.title.toLowerCase().includes(query)) ||
+        e.dateString.toLowerCase().includes(query)
+      );
+
+      if (filtered.length === 0) {
+        list.innerHTML = `
+          <div style="text-align:center; padding:40px 20px; color:var(--text-muted);">
+            <div style="font-size:40px; margin-bottom:12px;">🌌</div>
+            <div style="font-size:15px; font-weight:bold; color:var(--text-light); margin-bottom:6px;">Henüz Not Eklenmemiş</div>
+            <div style="font-size:12px;">365 Gün haritasından bir güne dokunarak ilk yıldızını ve anını ekle!</div>
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = filtered.map(e => {
+        const shapeObj = SHAPES.find(s => s.id === e.shape) || { symbol: '⭐' };
+        return `
+          <div class="note-card" onclick="openDaySheet(${e.dayNumber})">
+            <div class="shape-badge" style="background:${e.colorValue}22; border:1.5px solid ${e.colorValue}; box-shadow:0 0 10px ${e.colorValue}44;">
+              ${shapeObj.symbol}
+            </div>
+            <div class="note-info">
+              <div class="note-header">
+                <span class="note-date">${e.dateString}</span>
+                <span class="note-day-num">#${e.dayNumber}</span>
+              </div>
+              ${e.title ? `<div class="note-title" style="color:${e.colorValue};">${escapeHtml(e.title)}</div>` : ''}
+              <div class="note-body">${escapeHtml(e.note)}</div>
+              ${e.mood ? `<div style="font-size:10px; color:var(--gold); margin-top:6px;">${e.mood}</div>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Render Today Screen (Tab 3)
+    function renderToday() {
+      const container = document.getElementById('todayContent');
+      const todayEntry = entries[todayNum];
+      document.getElementById('todayFullDate').innerText = getTurkishDate(todayNum);
+      document.getElementById('todayDaySub').innerText = `Yılın ${todayNum}. Günü • Kalan ${365 - todayNum} Gün`;
+
+      if (todayEntry) {
+        const shapeObj = SHAPES.find(s => s.id === todayEntry.shape) || { symbol: '⭐' };
+        container.innerHTML = `
+          <div style="background:var(--surface); border-radius:20px; padding:20px; border:1px solid ${todayEntry.colorValue}55; box-shadow:0 0 20px ${todayEntry.colorValue}22;">
+            <div style="display:flex; align-items:center; gap:14px; margin-bottom:14px;">
+              <div style="width:48px; height:48px; border-radius:50%; background:${todayEntry.colorValue}22; border:1.5px solid ${todayEntry.colorValue}; display:flex; align-items:center; justify-content:center; font-size:24px;">
+                ${shapeObj.symbol}
+              </div>
+              <div>
+                <div style="font-size:16px; font-weight:bold; color:var(--text-light);">Bugünün Yıldızı Parlıyor ✨</div>
+                <div style="font-size:11px; color:var(--gold);">${todayEntry.mood || ''}</div>
+              </div>
+            </div>
+
+            ${todayEntry.title ? `<div style="font-size:15px; font-weight:bold; color:${todayEntry.colorValue}; margin-bottom:6px;">${escapeHtml(todayEntry.title)}</div>` : ''}
+            <div style="font-size:13px; line-height:1.5; color:var(--text-light); margin-bottom:16px;">${escapeHtml(todayEntry.note)}</div>
+
+            <button class="btn-submit" style="background:var(--card); color:var(--text-light); border:1px solid rgba(255,255,255,0.15);" onclick="openEditSheet(${todayNum})">
+              ✏️ Notu Güncelle
+            </button>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <div style="background:var(--surface); border-radius:20px; padding:20px; border:1px solid rgba(255,255,255,0.1);">
+            <div style="font-size:15px; font-weight:bold; margin-bottom:14px;">Bugünün Yıldızını Seç & Anını Yaz</div>
+
+            <div class="form-group">
+              <label class="form-label">Şekil Seç</label>
+              <div class="shapes-scroll" id="todayShapePicker">
+                ${SHAPES.map(s => `
+                  <div class="shape-item ${s.id === selectedShape ? 'selected' : ''}" onclick="pickShape('${s.id}')">
+                    <span style="font-size:20px;">${s.symbol}</span>
+                    <span style="font-size:9px; color:var(--text-muted);">${s.name}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Işıltı Rengi</label>
+              <div class="colors-scroll" id="todayColorPicker">
+                ${COLORS.map(c => `
+                  <div class="color-dot ${c.value === selectedColor ? 'selected' : ''}" style="background:${c.value};" onclick="pickColor('${c.value}')"></div>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="form-group">
+              <input type="text" class="input-field" id="todayTitleInput" placeholder="Bugünün Başlığı (İsteğe bağlı)">
+            </div>
+
+            <div class="form-group">
+              <textarea class="input-field" id="todayNoteInput" rows="3" placeholder="Bugün nasıldı? Aklından ve kalbinden geçenler..."></textarea>
+            </div>
+
+            <button class="btn-submit" onclick="saveTodayFromScreen()">
+              ⭐ Bugünü Gökyüzüne Kaydet
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    function saveTodayFromScreen() {
+      const note = document.getElementById('todayNoteInput').value.trim();
+      const title = document.getElementById('todayTitleInput').value.trim();
+      if (!note) {
+        alert('Lütfen bugünün için bir iki cümle not yaz ✨');
+        return;
+      }
+      entries[todayNum] = {
+        dayNumber: todayNum,
+        dateString: getTurkishDate(todayNum),
+        shape: selectedShape,
+        colorValue: selectedColor,
+        mood: selectedMood,
+        title: title,
+        note: note,
+        updatedAt: new Date().toISOString()
+      };
+      saveData();
+      updateStats();
+      renderNotes();
+      renderToday();
+    }
+
+    function openToday() {
+      openDaySheet(todayNum);
+    }
+
+    function switchTab(index) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+      const screens = ['screenConstellation', 'screenNotes', 'screenToday', 'screenSettings'];
+      document.getElementById(screens[index]).classList.add('active');
+      document.querySelectorAll('.nav-item')[index].classList.add('active');
+
+      if (index === 0) {
+        setTimeout(resizeCanvas, 50);
+      } else if (index === 1) {
+        renderNotes();
+      } else if (index === 2) {
+        renderToday();
+      }
+    }
+
+    function loadSampleStars() {
+      entries[todayNum] = {
+        dayNumber: todayNum,
+        dateString: getTurkishDate(todayNum),
+        shape: 'star',
+        colorValue: '#FFD700',
+        title: 'Gökyüzü Başlangıcı',
+        note: 'Bugün 365 günlüğümün ilk yıldızını parlattım. Her günüm bir yıldıza dönüşecek!',
+        mood: '✨ Harika'
+      };
+      entries[Math.max(1, todayNum - 3)] = {
+        dayNumber: Math.max(1, todayNum - 3),
+        dateString: getTurkishDate(Math.max(1, todayNum - 3)),
+        shape: 'heart',
+        colorValue: '#FB7185',
+        title: 'Huzurlu Akşam',
+        note: 'Sevdiklerimle kahve içip uzun uzun sohbet ettik. Çok iyi geldi.',
+        mood: '💖 Romantik'
+      };
+      entries[Math.max(1, todayNum - 8)] = {
+        dayNumber: Math.max(1, todayNum - 8),
+        dateString: getTurkishDate(Math.max(1, todayNum - 8)),
+        shape: 'moon',
+        colorValue: '#A855F7',
+        title: 'Gece Yürüyüşü',
+        note: 'Yıldızların altında sakin bir yürüyüş. Zihnim tertemiz oldu.',
+        mood: '☕ Huzurlu'
+      };
+      entries[Math.max(1, todayNum - 14)] = {
+        dayNumber: Math.max(1, todayNum - 14),
+        dateString: getTurkishDate(Math.max(1, todayNum - 14)),
+        shape: 'flower',
+        colorValue: '#34D399',
+        title: 'Bahar Esintisi',
+        note: 'Yeni bir kitap aldım ve parkta okudum.',
+        mood: '🌸 Mutlu'
+      };
+      saveData();
+      updateStats();
+      renderNotes();
+      renderToday();
+      switchTab(0);
+      alert('Örnek yıldızlar yüklendi! ⭐ Gökyüzünde parıldayan şekilleri inceleyebilirsin.');
+    }
+
+    function exportData() {
+      const dataStr = JSON.stringify(entries, null, 2);
+      navigator.clipboard.writeText(dataStr).then(() => {
+        alert('Yedek verin panoya kopyalandı! Bir not defterine yapıştırabilirsin.');
+      });
+    }
+
+    function clearAllData() {
+      if (confirm('Tüm günlüğü sıfırlamak istediğine emin misin?')) {
+        entries = {};
+        saveData();
+        updateStats();
+        renderNotes();
+        renderToday();
+        alert('Tüm veriler temizlendi.');
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    // Init
+    document.getElementById('todayPillText').innerText = `Bugün (${todayNum}. Gün)`;
+    if (Object.keys(entries).length === 0) {
+      loadSampleStars();
+    } else {
+      updateStats();
+    }
+    setTimeout(resizeCanvas, 100);
+  </script>
+</body>
+</html>
