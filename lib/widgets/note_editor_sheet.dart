@@ -255,7 +255,7 @@ class _NoteEditorSheetState extends State<NoteEditorSheet> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.sparkles, size: 18),
+                  const Icon(Icons.auto_awesome_rounded, size: 18),
                   const SizedBox(width: 8),
                   Text(
                     widget.existingEntry == null ? 'Günü Aydınlat & Kaydet' : 'Notu Güncelle',
