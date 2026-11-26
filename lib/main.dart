@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'models/day_entry.dart';
 import 'services/storage_service.dart';
+import 'services/update_service.dart';
 import 'utils/constants.dart';
 import 'screens/constellation_screen.dart';
 import 'screens/notes_screen.dart';
@@ -60,6 +61,16 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   void initState() {
     super.initState();
     _loadEntries();
+    _checkForUpdates();
+  }
+
+  Future<void> _checkForUpdates() async {
+    // Wait a moment for the UI to settle, then check silently
+    await Future.delayed(const Duration(seconds: 2));
+    final updateInfo = await UpdateService.checkForUpdate();
+    if (updateInfo != null && mounted) {
+      UpdateService.showUpdateDialog(context, updateInfo);
+    }
   }
 
   Future<void> _loadEntries() async {
