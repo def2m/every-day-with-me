@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/day_entry.dart';
 import '../services/storage_service.dart';
+import '../services/update_service.dart';
 import '../utils/constants.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -181,7 +182,32 @@ class SettingsScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             // About / GitHub APK info
-            _sectionHeader('HAKKINDA'),
+            _sectionHeader('GÜNCELLEME & HAKKINDA'),
+            _menuTile(
+              icon: Icons.system_update_rounded,
+              title: 'Güncellemeleri Kontrol Et',
+              subtitle: 'GitHub üzerinden yeni sürüm olup olmadığını denetle',
+              onTap: () async {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Güncellemeler kontrol ediliyor... 🔍'),
+                    duration: Duration(seconds: 1),
+                  ),
+                );
+                final info = await UpdateService.checkForUpdate();
+                if (!context.mounted) return;
+                if (info != null) {
+                  UpdateService.showUpdateDialog(context, info);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Uygulamanız zaten en güncel sürümde! ✨'),
+                      backgroundColor: Color(0xFF10B981),
+                    ),
+                  );
+                }
+              },
+            ),
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
