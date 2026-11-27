@@ -256,7 +256,7 @@ class _UpdateDialogState extends State<_UpdateDialog> {
           ? null
           : [
               TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
+                onPressed: () => Navigator.of(context).pop(),
                 child: const Text('Daha Sonra',
                     style: TextStyle(color: AppConstants.textMuted)),
               ),
