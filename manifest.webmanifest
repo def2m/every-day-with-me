@@ -1,0 +1,10 @@
+{
+  "name": "Every Day With Me",
+  "short_name": "Every Day",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#EEF3F1",
+  "theme_color": "#14302B",
+  "icons": [{"src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"}]
+}
