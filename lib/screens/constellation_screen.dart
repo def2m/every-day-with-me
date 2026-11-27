@@ -25,7 +25,6 @@ class _ConstellationScreenState extends State<ConstellationScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _animController;
   int? _selectedDay;
-  final TransformationController _transController = TransformationController();
 
   @override
   void initState() {
@@ -39,7 +38,6 @@ class _ConstellationScreenState extends State<ConstellationScreen>
   @override
   void dispose() {
     _animController.dispose();
-    _transController.dispose();
     super.dispose();
   }
 
@@ -175,7 +173,7 @@ class _ConstellationScreenState extends State<ConstellationScreen>
                           const Icon(Icons.stars_rounded, color: AppConstants.accentGold, size: 16),
                           const SizedBox(width: 6),
                           Text(
-                            'Bugün (${today}. Gün)',
+                            AppConstants.getTurkishDate(today),
                             style: const TextStyle(
                               color: AppConstants.textLight,
                               fontSize: 12,
@@ -204,32 +202,27 @@ class _ConstellationScreenState extends State<ConstellationScreen>
               ),
             ),
 
-            // Constellation Canvas with InteractiveViewer (pinch-to-zoom & pan)
+            // Constellation Canvas (Fixed, no zoom)
             Expanded(
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   final canvasSize = Size(constraints.maxWidth, constraints.maxHeight);
 
-                  return InteractiveViewer(
-                    transformationController: _transController,
-                    minScale: 1.0,
-                    maxScale: 3.5,
-                    child: GestureDetector(
-                      onTapUp: (details) => _onCanvasTap(details, canvasSize),
-                      child: AnimatedBuilder(
-                        animation: _animController,
-                        builder: (context, child) {
-                          return CustomPaint(
-                            size: canvasSize,
-                            painter: ConstellationPainter(
-                              entries: widget.entries,
-                              todayDayNumber: today,
-                              selectedDayNumber: _selectedDay,
-                              pulseValue: _animController.value,
-                            ),
-                          );
-                        },
-                      ),
+                  return GestureDetector(
+                    onTapUp: (details) => _onCanvasTap(details, canvasSize),
+                    child: AnimatedBuilder(
+                      animation: _animController,
+                      builder: (context, child) {
+                        return CustomPaint(
+                          size: canvasSize,
+                          painter: ConstellationPainter(
+                            entries: widget.entries,
+                            todayDayNumber: today,
+                            selectedDayNumber: _selectedDay,
+                            pulseValue: _animController.value,
+                          ),
+                        );
+                      },
                     ),
                   );
                 },

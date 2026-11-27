@@ -1,5 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/day_entry.dart';
+import '../services/storage_service.dart';
 import '../utils/constants.dart';
 import 'shape_selector.dart';
 
@@ -23,8 +26,12 @@ class _NoteEditorSheetState extends State<NoteEditorSheet> {
   late String _shape;
   late int _colorValue;
   late String _mood;
+  late String _mealType;
+  late List<String> _photoPaths;
   late TextEditingController _titleController;
   late TextEditingController _noteController;
+  late TextEditingController _mealController;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -33,15 +40,40 @@ class _NoteEditorSheetState extends State<NoteEditorSheet> {
     _shape = e?.shape ?? 'star';
     _colorValue = e?.colorValue ?? 0xFFFFD700;
     _mood = e?.mood ?? AppConstants.moods.first;
+    _mealType = e?.mealType ?? AppConstants.mealTypes.first;
+    _photoPaths = List<String>.from(e?.photoPaths ?? []);
     _titleController = TextEditingController(text: e?.title ?? '');
     _noteController = TextEditingController(text: e?.note ?? '');
+    _mealController = TextEditingController(text: e?.mealNote ?? '');
   }
 
   @override
   void dispose() {
     _titleController.dispose();
     _noteController.dispose();
+    _mealController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickPhoto() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+      if (image != null) {
+        final savedPath = await StorageService.savePhotoPermanently(image.path);
+        if (mounted) {
+          setState(() => _photoPaths.add(savedPath));
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Fotoğraf seçilemedi: $e')),
+        );
+      }
+    }
   }
 
   void _submit() {
@@ -64,6 +96,9 @@ class _NoteEditorSheetState extends State<NoteEditorSheet> {
       title: _titleController.text.trim(),
       note: noteText,
       mood: _mood,
+      mealType: _mealType,
+      mealNote: _mealController.text.trim(),
+      photoPaths: _photoPaths,
       updatedAt: DateTime.now(),
     );
 
@@ -92,7 +127,6 @@ class _NoteEditorSheetState extends State<NoteEditorSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Drag handle
             Center(
               child: Container(
                 width: 40,
@@ -105,7 +139,7 @@ class _NoteEditorSheetState extends State<NoteEditorSheet> {
               ),
             ),
 
-            // Header: Date & Day number
+            // Header: Gün Ay Yıl
             Row(
               children: [
                 Container(
@@ -123,25 +157,13 @@ class _NoteEditorSheetState extends State<NoteEditorSheet> {
                 ),
                 const SizedBox(width: 14),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        formattedDate,
-                        style: const TextStyle(
-                          color: AppConstants.textLight,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        'Yılın ${widget.dayNumber}. Günü',
-                        style: const TextStyle(
-                          color: AppConstants.textMuted,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    formattedDate,
+                    style: const TextStyle(
+                      color: AppConstants.textLight,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 IconButton(
@@ -153,7 +175,6 @@ class _NoteEditorSheetState extends State<NoteEditorSheet> {
 
             const SizedBox(height: 20),
 
-            // Shape and Color Selectors
             ShapeSelector(
               selectedShape: _shape,
               onShapeChanged: (newShape) => setState(() => _shape = newShape),
@@ -163,9 +184,9 @@ class _NoteEditorSheetState extends State<NoteEditorSheet> {
 
             const SizedBox(height: 18),
 
-            // Mood Tags
+            // Mood
             const Text(
-              'Ruh Hali',
+              'Bugün Nasılsın? (Ruh Hali)',
               style: TextStyle(
                 color: AppConstants.textLight,
                 fontSize: 14,
@@ -196,6 +217,59 @@ class _NoteEditorSheetState extends State<NoteEditorSheet> {
                   ),
                 );
               }).toList(),
+            ),
+
+            const SizedBox(height: 18),
+
+            // Meal section
+            const Text(
+              'Bugün Ne Yedin? (Yemek Düzeni)',
+              style: TextStyle(
+                color: AppConstants.textLight,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: AppConstants.mealTypes.map((mt) {
+                final isSelected = (_mealType == mt);
+                return ChoiceChip(
+                  label: Text(mt),
+                  selected: isSelected,
+                  onSelected: (val) {
+                    if (val) setState(() => _mealType = mt);
+                  },
+                  selectedColor: const Color(0xFF34D399).withOpacity(0.25),
+                  backgroundColor: AppConstants.spaceCard,
+                  labelStyle: TextStyle(
+                    color: isSelected ? const Color(0xFF34D399) : AppConstants.textMuted,
+                    fontSize: 12,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  ),
+                  side: BorderSide(
+                    color: isSelected ? const Color(0xFF34D399) : Colors.white12,
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _mealController,
+              style: const TextStyle(color: AppConstants.textLight, fontSize: 14),
+              decoration: InputDecoration(
+                hintText: 'Ne yediğini yaz (örn: Kahvaltı, salata, makarna...)',
+                hintStyle: const TextStyle(color: AppConstants.textMuted, fontSize: 12),
+                filled: true,
+                fillColor: AppConstants.spaceCard,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide.none,
+                ),
+              ),
             ),
 
             const SizedBox(height: 18),
@@ -237,7 +311,75 @@ class _NoteEditorSheetState extends State<NoteEditorSheet> {
               ),
             ),
 
-            const SizedBox(height: 22),
+            const SizedBox(height: 16),
+
+            // Photo Picker Section
+            Row(
+              children: [
+                const Text(
+                  'Günün Fotoğrafları',
+                  style: TextStyle(
+                    color: AppConstants.textLight,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: _pickPhoto,
+                  icon: const Icon(Icons.add_photo_alternate_rounded, color: AppConstants.accentGold, size: 18),
+                  label: const Text('Fotoğraf Ekle', style: TextStyle(color: AppConstants.accentGold, fontSize: 13)),
+                ),
+              ],
+            ),
+            if (_photoPaths.isNotEmpty)
+              SizedBox(
+                height: 82,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _photoPaths.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 10),
+                  itemBuilder: (context, idx) {
+                    final path = _photoPaths[idx];
+                    return Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.file(
+                            File(path),
+                            width: 82,
+                            height: 82,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              width: 82,
+                              height: 82,
+                              color: AppConstants.spaceCard,
+                              child: const Icon(Icons.broken_image, color: AppConstants.textMuted),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          top: 4,
+                          right: 4,
+                          child: GestureDetector(
+                            onTap: () => setState(() => _photoPaths.removeAt(idx)),
+                            child: Container(
+                              padding: const EdgeInsets.all(3),
+                              decoration: const BoxDecoration(
+                                color: Colors.black87,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.close, color: Colors.white, size: 14),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+
+            const SizedBox(height: 20),
 
             // Save Button
             ElevatedButton(

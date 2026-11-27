@@ -55,17 +55,17 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
   Map<int, DayEntry> _entries = {};
+  Map<int, List<DailyTask>> _tasks = {};
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadEntries();
+    _loadData();
     _checkForUpdates();
   }
 
   Future<void> _checkForUpdates() async {
-    // Wait a moment for the UI to settle, then check silently
     await Future.delayed(const Duration(seconds: 2));
     final updateInfo = await UpdateService.checkForUpdate();
     if (updateInfo != null && mounted) {
@@ -73,24 +73,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     }
   }
 
-  Future<void> _loadEntries() async {
+  Future<void> _loadData() async {
     final entries = await StorageService.loadEntries();
-    // If first time open, prefill a welcome star for today so user sees it right away
-    if (entries.isEmpty) {
-      await StorageService.loadSampleData();
-      final reloaded = await StorageService.loadEntries();
-      if (mounted) {
-        setState(() {
-          _entries = reloaded;
-          _isLoading = false;
-        });
-      }
-      return;
-    }
+    final tasks = await StorageService.loadTasks();
 
     if (mounted) {
       setState(() {
         _entries = entries;
+        _tasks = tasks;
         _isLoading = false;
       });
     }
@@ -107,6 +97,17 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     await StorageService.deleteEntry(dayNumber);
     setState(() {
       _entries.remove(dayNumber);
+    });
+  }
+
+  void _saveTasks(int dayNumber, List<DailyTask> dayTasks) async {
+    await StorageService.saveTasksForDay(dayNumber, dayTasks);
+    setState(() {
+      if (dayTasks.isEmpty) {
+        _tasks.remove(dayNumber);
+      } else {
+        _tasks[dayNumber] = dayTasks;
+      }
     });
   }
 
@@ -136,12 +137,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       ),
       TodayScreen(
         entries: _entries,
+        tasks: _tasks,
         onSaveEntry: _saveEntry,
         onDeleteEntry: _deleteEntry,
+        onSaveTasks: _saveTasks,
       ),
       SettingsScreen(
         entries: _entries,
-        onReload: _loadEntries,
+        onReload: _loadData,
       ),
     ];
 

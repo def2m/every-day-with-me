@@ -44,24 +44,7 @@ class ConstellationPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // 1. Draw connecting constellation lines between nearby filled days
-    final sortedEntries = entries.keys.toList()..sort();
-    final linePaint = Paint()
-      ..color = const Color(0x33A855F7)
-      ..strokeWidth = 1.0
-      ..style = PaintingStyle.stroke;
-
-    for (int i = 0; i < sortedEntries.length - 1; i++) {
-      final d1 = sortedEntries[i];
-      final d2 = sortedEntries[i + 1];
-      if ((d2 - d1).abs() <= 3) {
-        final pos1 = getDayPosition(d1, size);
-        final pos2 = getDayPosition(d2, size);
-        canvas.drawLine(pos1, pos2, linePaint);
-      }
-    }
-
-    // 2. Draw all 365 days
+    // Draw all 365 days without connecting lines
     for (int day = 1; day <= 365; day++) {
       final pos = getDayPosition(day, size);
       final entry = entries[day];

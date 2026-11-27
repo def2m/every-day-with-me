@@ -302,7 +302,7 @@ class _NotesScreenState extends State<NotesScreen> {
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        // Date & Day #
+                                        // Date & Mood (Gün Ay Yıl)
                                         Row(
                                           children: [
                                             Text(
@@ -313,15 +313,14 @@ class _NotesScreenState extends State<NotesScreen> {
                                                 fontWeight: FontWeight.bold,
                                               ),
                                             ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              '#${entry.dayNumber}',
-                                              style: const TextStyle(
-                                                color: AppConstants.textMuted,
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w600,
+                                            if (entry.photoPaths.isNotEmpty) ...[
+                                              const SizedBox(width: 6),
+                                              const Icon(
+                                                Icons.photo_camera_rounded,
+                                                color: AppConstants.accentGold,
+                                                size: 14,
                                               ),
-                                            ),
+                                            ],
                                             const Spacer(),
                                             if (entry.mood.isNotEmpty)
                                               Text(

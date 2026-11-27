@@ -1,7 +1,7 @@
 name: gun365
 description: "365 Gün - Her güne bir şekil ve not bıraktığın gökyüzü günlüğü"
 publish_to: 'none'
-version: 1.0.3+3
+version: 1.0.7+7
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -16,6 +16,7 @@ dependencies:
   url_launcher: ^6.2.0
   package_info_plus: ^8.0.0
   open_filex: ^4.5.0
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:

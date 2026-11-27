@@ -55,6 +55,15 @@ class AppConstants {
     '🌧️ Hüzünlü',
   ];
 
+  // Meal categories for eating pattern analysis
+  static const List<String> mealTypes = [
+    '🥗 Sağlıklı',
+    '🍲 Ev Yemeği',
+    '🍔 Fast Food',
+    '🍰 Tatlı / Atıştırmalık',
+    '🥪 Hafif / Pratik',
+  ];
+
   // Month days count in a standard non-leap year (365 days)
   static const List<int> daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
   static const List<String> monthNames = [
@@ -62,8 +71,7 @@ class AppConstants {
     'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
   ];
 
-  /// Converts a day number (1 - 365) to Turkish formatted date string
-  /// e.g. 1 -> "1 Ocak", 32 -> "1 Şubat"
+  /// Converts a day number (1 - 365) to Turkish formatted date string (Gün Ay Yıl)
   static String getTurkishDate(int dayNumber, [int? year]) {
     if (dayNumber < 1) dayNumber = 1;
     if (dayNumber > 365) dayNumber = 365;
@@ -78,16 +86,39 @@ class AppConstants {
       }
       remaining -= daysInMonth[i];
     }
-    return '31 Aralık';
+    final yr = year ?? DateTime.now().year;
+    return '31 Aralık $yr';
+  }
+
+  /// Converts a day number (1 - 365) to DateTime in the given year
+  static DateTime getDateFromDayNumber(int dayNumber, [int? year]) {
+    if (dayNumber < 1) dayNumber = 1;
+    if (dayNumber > 365) dayNumber = 365;
+    final yr = year ?? DateTime.now().year;
+    int remaining = dayNumber;
+    for (int i = 0; i < daysInMonth.length; i++) {
+      if (remaining <= daysInMonth[i]) {
+        return DateTime(yr, i + 1, remaining);
+      }
+      remaining -= daysInMonth[i];
+    }
+    return DateTime(yr, 12, 31);
+  }
+
+  /// Converts a DateTime to day number (1 - 365)
+  static int getDayNumberFromDate(DateTime date) {
+    int total = 0;
+    for (int i = 0; i < date.month - 1; i++) {
+      total += daysInMonth[i];
+    }
+    total += date.day;
+    if (total > 365) return 365;
+    if (total < 1) return 1;
+    return total;
   }
 
   /// Calculates day of year (1 - 365) for today
   static int getTodayDayOfYear() {
-    final now = DateTime.now();
-    final firstDay = DateTime(now.year, 1, 1);
-    final diff = now.difference(firstDay).inDays + 1;
-    if (diff > 365) return 365;
-    if (diff < 1) return 1;
-    return diff;
+    return getDayNumberFromDate(DateTime.now());
   }
 }
